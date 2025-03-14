@@ -8,7 +8,7 @@ export interface Tag {
     id: number
     name: string;
     category:string
-    value:string
+    value:number
   }
     
 interface FormulaStore {

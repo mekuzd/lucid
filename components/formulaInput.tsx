@@ -1,86 +1,107 @@
-import React, { useState, useEffect } from 'react';
-
-import { useSuggestions } from '@/hooks/fetchSuggestion';
+import React, { useState, useEffect, useRef } from 'react';
 import useFormulaStore, { suggestion, Tag } from '@/store/appStore';
+import { useSuggestions } from '@/hooks/fetchSuggestion';
 
 const FormulaInput = () => {
-    const { inputValue, tags, setInputValue, addTag, removeTag } = useFormulaStore();
-  const [query, setQuery] = useState('https://652f91320b8d8ddac0b2b62b.mockapi.io/autocomplete');
-  const { data: suggestions, isLoading } = useSuggestions(query);
+  const { tags, addTag, removeTag } = useFormulaStore();
+  const [query, setQuery] = useState('');
   const [filteredSuggestions, setFilteredSuggestions] = useState<suggestion[]>([]);
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false); // ✅ Show dropdown on tag click
+  const inputRef = useRef<HTMLDivElement>(null);
 
+  // ✅ Fetch suggestions
+  const { data: suggestions = [], isLoading } = useSuggestions(
+    'https://652f91320b8d8ddac0b2b62b.mockapi.io/autocomplete'
+  );
+
+  // ✅ Filter suggestions based on input or tag click
   useEffect(() => {
-    if (suggestions) {
-      const filtered = suggestions.filter((suggestion: suggestion) => {
-        return (
-          suggestion.name.includes(inputValue) ||
-          suggestion.category.includes(inputValue) ||
-          String(suggestion.value).includes(inputValue)
-        );
-      });
+    if (query) {
+      const filtered = suggestions.filter(
+        (s: suggestion) =>
+          s.name.toLowerCase().includes(query.toLowerCase()) ||
+          s.category.toLowerCase().includes(query.toLowerCase())
+      );
       setFilteredSuggestions(filtered);
+      setShowSuggestions(true); // Show dropdown when filtering
+    } else {
+      setFilteredSuggestions([]);
     }
-  }, [suggestions, inputValue]);
+  }, [query, suggestions]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    setQuery(value); 
+  // ✅ Handle text input
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    setQuery(e.currentTarget.innerText.trim());
   };
 
-  const handleSuggestionClick = (suggestion: suggestion) => {
-    addTag({ id: suggestion.id, name: suggestion.name, value: suggestion.value });
-    setInputValue(suggestion.value);
-    setQuery('');
-    setFilteredSuggestions([]);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && inputValue === '') {
-      const lastTag = tags[tags.length - 1];
-      if (lastTag) {
-        removeTag(lastTag.id);
+  // ✅ Handle backspace to remove last tag
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Backspace') {
+      if (query === '' && tags.length > 0) {
+        removeTag(tags[tags.length - 1].id); // Remove last tag
+      } else if (query.length > 0) {
+        setQuery(''); // Clear input text
+        if (inputRef.current) {
+          inputRef.current.innerText = ''; // Reset contentEditable field
+        }
       }
     }
   };
+  
 
-  const handleTagRemove = (id: number) => {
-    removeTag(id);
-    setOpenDropdownId(null);
+  // ✅ Handle tag selection from suggestions
+  const handleSuggestionClick = (suggestion: suggestion) => {
+    addTag({ id: suggestion.id, name: suggestion.name, value: suggestion.value });
+
+    if (inputRef.current) {
+      inputRef.current.innerText = ''; // Clear input field
+    }
+
+    setQuery('');
+    setFilteredSuggestions([]);
+    setShowSuggestions(false);
   };
 
-  const toggleDropdown = (id: number) => {
-    setOpenDropdownId(openDropdownId === id ? null : id);
+  // ✅ Handle tag click to show suggestions
+  const handleTagClick = (tag: Tag) => {
+    setQuery(tag.name); // Set input to tag name
+    setFilteredSuggestions(
+      suggestions.filter(
+        (s:suggestion) => s.name.toLowerCase().includes(tag.name.toLowerCase())
+      )
+    );
+    setShowSuggestions(true); // Show suggestions
   };
 
   return (
-    <div>
-      {tags.map((tag: Tag) => (
-          <div key={tag.id} style={{ display: 'inline-block', margin: '4px', padding: '4px', border: '1px solid #ccc' }}>
-            {tag.name}
-            <button onClick={() => toggleDropdown(tag.id)}>▼</button>
-            {openDropdownId === tag.id && (
-              <div style={{ position: 'absolute', backgroundColor: 'white', border: '1px solid #ccc' }}>
-                <div onClick={() => handleTagRemove(tag.id)}>Delete</div>
-              </div>
-            )}
-          </div>
-        ))}
-    <input
-        type="text"
-        value={inputValue}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown} // handleKeyDown is used here
-        placeholder="Enter formula..."
-      />
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div>
-          {inputValue && filteredSuggestions.map((suggestion: suggestion) => (
-            <div key={suggestion.id} onClick={() => handleSuggestionClick(suggestion)} className='dropdown'>
-              {suggestion.name} ({suggestion.category}) {suggestion.value}
+    <div className="formula-container">
+      <div className="input-wrapper">
+        {/* Tags */}
+        <div className="tags-container">
+          {tags.map((tag: Tag) => (
+            <span key={tag.id} className="tag" onClick={() => handleTagClick(tag)}>
+              {tag.name}
+            </span>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div
+          ref={inputRef}
+          contentEditable
+          suppressContentEditableWarning
+          className="formula-input"
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+
+      {/* Suggestions Dropdown */}
+      {showSuggestions && filteredSuggestions.length > 0 && (
+        <div className="suggestions">
+          {filteredSuggestions.map((s) => (
+            <div key={s.id} className="suggestion" onClick={() => handleSuggestionClick(s)}>
+              {s.name} ({s.category})
             </div>
           ))}
         </div>

@@ -1,9 +1,87 @@
-.dropdown{
-  border: 1px solid black;
-  padding: 8px;
-  margin-top: 20px;
-  max-width: 300px;
+.formula-container {
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+  position: relative;
+}
+
+.input-wrapper {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  border: 2px solid #ccc;
+  padding: 8px;
+  border-radius: 8px;
+  min-height: 40px;
+}
+
+.formula-input {
+  flex: 1;
+  /* min-height: 40px; */
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 5px;
+  cursor: text;
+  outline: none;
+}
+
+.tags-container {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #2c3e50;
+  color: #fff;
+  padding: 5px 8px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
+}
+
+.tag button {
+  background: none;
+  border: none;
+  color: #fff;
+  margin-left: 6px;
+  cursor: pointer;
+}
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-top: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.suggestion {
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.suggestion:hover {
+  background: #f0f0f0;
+}
+
+.suggestion-name {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.suggestion-category {
+  color: #888;
+  font-size: 14px;
 }
