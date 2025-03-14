@@ -8,10 +8,10 @@ const FormulaInput = () => {
   const [filteredSuggestions, setFilteredSuggestions] = useState<suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false); 
   const inputRef = useRef<HTMLDivElement>(null);
+const url = 'https://652f91320b8d8ddac0b2b62b.mockapi.io/autocomplete'
 
-
-  const { data: suggestions = [], isLoading } = useSuggestions(
-    'https://652f91320b8d8ddac0b2b62b.mockapi.io/autocomplete'
+  const { data: suggestions = [], } = useSuggestions(
+    url
   );
 
 
